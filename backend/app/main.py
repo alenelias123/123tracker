@@ -1,32 +1,22 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 
-class TopicCreate(BaseModel):
-    title: str
-    description: str = ""
-    mode: Literal["automated", "solo"]
+app = FastAPI(title="123tracker API")
 
-class TopicOut(BaseModel):
-    id: int
-    title: str
-    description: str
-    mode: str
-    class Config: orm_mode = True
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class SessionOut(BaseModel):
-    id: int
-    day_index: int
-    scheduled_for: str
-    status: str
-    class Config: orm_mode = True
+@app.get("/")
+def root():
+    return {"message": "123tracker API"}
 
-class NotesIn(BaseModel):
-    points: List[str] = Field(default_factory=list)
-
-class CompareOut(BaseModel):
-    recall_score: float
-    missed_points: list
-
-class SoloIn(BaseModel):
-    percent_covered: float
-    percent_remembered: float
+# Route structure for future implementation:
+# @app.include_router(topics.router, prefix="/api/topics", tags=["topics"])
+# @app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+# @app.include_router(notes.router, prefix="/api/notes", tags=["notes"])

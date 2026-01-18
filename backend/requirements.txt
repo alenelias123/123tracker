@@ -6,8 +6,10 @@ pydantic
 python-jose[cryptography]
 httpx
 requests
-sqlalchemy-pgvector
+pgvector
 sentence-transformers
 apscheduler
 sendgrid
 python-dotenv
+alembic
+numpy
