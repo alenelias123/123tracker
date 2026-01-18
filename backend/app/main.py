@@ -172,8 +172,11 @@ def add_notes(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Validate max 200 points
-    if len(notes_in.points) > 200:
-        raise HTTPException(status_code=400, detail="Maximum 200 bullet points allowed")
+    if len(notes_in.points) > settings.MAX_NOTES_PER_SESSION:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Maximum {settings.MAX_NOTES_PER_SESSION} bullet points allowed"
+        )
     
     # Generate embeddings
     points_with_embeddings = []
@@ -308,9 +311,9 @@ def get_solo_trend(
         suggestion = "No data yet. Complete sessions to see trends."
     else:
         avg_remembered = sum(m.percent_remembered for m in metrics) / len(metrics)
-        if avg_remembered >= 85:
+        if avg_remembered >= settings.SOLO_HIGH_RETENTION_THRESHOLD:
             suggestion = "Great retention! Consider increasing intervals."
-        elif avg_remembered < 60:
+        elif avg_remembered < settings.SOLO_LOW_RETENTION_THRESHOLD:
             suggestion = "Low retention. Schedule sessions sooner."
         else:
             suggestion = "Keep up the current pace."

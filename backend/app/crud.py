@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
 from app.models import User, Topic, Session as SessionModel, NotePoint, Comparison, SoloMetric, ModeEnum
 from app.ai.embeddings import get_embedding
@@ -69,7 +69,7 @@ def complete_session(db: Session, session_id: int):
     session = get_session_by_id(db, session_id)
     if session:
         session.status = "completed"
-        session.completed_at = datetime.utcnow()
+        session.completed_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(session)
     return session

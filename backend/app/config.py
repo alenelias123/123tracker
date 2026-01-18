@@ -11,5 +11,8 @@ class Settings:
     SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
     COMPARE_THRESHOLD = float(os.getenv("COMPARE_THRESHOLD", "0.80"))
+    MAX_NOTES_PER_SESSION = int(os.getenv("MAX_NOTES_PER_SESSION", "200"))
+    SOLO_HIGH_RETENTION_THRESHOLD = float(os.getenv("SOLO_HIGH_RETENTION_THRESHOLD", "85"))
+    SOLO_LOW_RETENTION_THRESHOLD = float(os.getenv("SOLO_LOW_RETENTION_THRESHOLD", "60"))
 
 settings = Settings()
