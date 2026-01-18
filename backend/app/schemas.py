@@ -12,7 +12,7 @@ class TopicOut(BaseModel):
     description: str
     mode: str
     class Config: 
-        orm_mode = True
+        from_attributes = True
 
 class SessionOut(BaseModel):
     id: int
@@ -20,7 +20,7 @@ class SessionOut(BaseModel):
     scheduled_for: str
     status: str
     class Config: 
-        orm_mode = True
+        from_attributes = True
 
 class NotesIn(BaseModel):
     points: List[str] = Field(default_factory=list)

@@ -12,6 +12,10 @@ def compare_notes(prev_points: List[dict], curr_points: List[dict], threshold: f
     
     Returns:
         dict with {recall_score: float (0-100), missed_points: List[dict with text]}
+    
+    Note:
+        Embeddings should be normalized vectors for accurate cosine similarity.
+        The embeddings.get_embedding() function returns normalized vectors.
     """
     if not prev_points:
         return {"recall_score": 100.0, "missed_points": []}
@@ -22,8 +26,11 @@ def compare_notes(prev_points: List[dict], curr_points: List[dict], threshold: f
             "missed_points": [{"text": point["text"]} for point in prev_points]
         }
     
-    prev_embeddings = np.array([point["embedding"] for point in prev_points])
-    curr_embeddings = np.array([point["embedding"] for point in curr_points])
+    try:
+        prev_embeddings = np.array([point["embedding"] for point in prev_points])
+        curr_embeddings = np.array([point["embedding"] for point in curr_points])
+    except KeyError as e:
+        raise ValueError(f"Point dictionary missing required key: {e}")
     
     # Compute cosine similarity matrix
     # Since embeddings are normalized, dot product gives cosine similarity
