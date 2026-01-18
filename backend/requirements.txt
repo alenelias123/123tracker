@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-jose[cryptography]
+httpx
+requests
+sqlalchemy-pgvector
+sentence-transformers
+apscheduler
+sendgrid
+python-dotenv
