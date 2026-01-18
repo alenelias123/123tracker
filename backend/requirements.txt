@@ -13,3 +13,6 @@ sendgrid
 python-dotenv
 alembic
 numpy
+pytest
+pytest-asyncio
+pytest-cov

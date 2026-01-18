@@ -1,0 +1,5 @@
+
+# Test coverage
+htmlcov/
+.coverage
+*.db
