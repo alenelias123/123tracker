@@ -1,51 +1,67 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
+import logging
 from app.models import User, Topic, Session as SessionModel, NotePoint, Comparison, SoloMetric, ModeEnum
 from app.ai.embeddings import get_embedding
 
+logger = logging.getLogger(__name__)
+
 def get_or_create_user(db: Session, auth0_sub: str, email: str) -> User:
     """Get existing user or create new one."""
-    user = db.query(User).filter(User.auth0_sub == auth0_sub).first()
-    if not user:
-        user = User(auth0_sub=auth0_sub, email=email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
+    try:
+        user = db.query(User).filter(User.auth0_sub == auth0_sub).first()
+        if not user:
+            user = User(auth0_sub=auth0_sub, email=email)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            logger.info(f"Created new user: {auth0_sub}")
+        return user
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error creating user: {e}")
+        raise
 
 def create_topic(db: Session, user_id: int, title: str, description: str, mode: str) -> Topic:
     """Create topic and auto-create 3 sessions for days 1, 3, 7."""
-    mode_enum = ModeEnum.automated if mode == "automated" else ModeEnum.solo
-    topic = Topic(
-        user_id=user_id,
-        title=title,
-        description=description,
-        mode=mode_enum
-    )
-    db.add(topic)
-    db.flush()  # Get topic.id
-    
-    # Auto-create 3 sessions
-    today = date.today()
-    sessions_data = [
-        (1, today + timedelta(days=1)),
-        (3, today + timedelta(days=3)),
-        (7, today + timedelta(days=7))
-    ]
-    
-    for day_index, scheduled_for in sessions_data:
-        session = SessionModel(
-            topic_id=topic.id,
-            day_index=day_index,
-            scheduled_for=scheduled_for,
-            status="scheduled"
+    try:
+        mode_enum = ModeEnum.automated if mode == "automated" else ModeEnum.solo
+        topic = Topic(
+            user_id=user_id,
+            title=title,
+            description=description,
+            mode=mode_enum
         )
-        db.add(session)
-    
-    db.commit()
-    db.refresh(topic)
-    return topic
+        db.add(topic)
+        db.flush()  # Get topic.id
+        
+        # Auto-create 3 sessions
+        today = date.today()
+        sessions_data = [
+            (1, today + timedelta(days=1)),
+            (3, today + timedelta(days=3)),
+            (7, today + timedelta(days=7))
+        ]
+        
+        for day_index, scheduled_for in sessions_data:
+            session = SessionModel(
+                topic_id=topic.id,
+                day_index=day_index,
+                scheduled_for=scheduled_for,
+                status="scheduled"
+            )
+            db.add(session)
+        
+        db.commit()
+        db.refresh(topic)
+        logger.info(f"Created topic '{title}' with 3 sessions")
+        return topic
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error creating topic: {e}")
+        raise
 
 def get_user_topics(db: Session, user_id: int) -> List[Topic]:
     """Get all topics for a user."""

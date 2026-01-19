@@ -3,16 +3,61 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import date
+import logging
 
 from app.config import settings
-from app.db import get_db
+from app.db import get_db, init_db
 from app.auth import get_current_token
 from app.models import User, Topic, Session as SessionModel, NotePoint
 from app import schemas, crud
 from app.ai.embeddings import get_embedding
 from app.ai.compare import compare_notes
+from app.scheduler import start_scheduler
 
-app = FastAPI(title="123tracker API")
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title="123tracker API",
+    version="1.0.0",
+    description="Study tracker with spaced repetition"
+)
+
+# Validate required environment variables on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services and validate configuration."""
+    logger.info("Starting 123tracker API...")
+    
+    # Validate required environment variables
+    if not settings.AUTH0_DOMAIN:
+        logger.error("AUTH0_DOMAIN is not set")
+        raise ValueError("AUTH0_DOMAIN environment variable is required")
+    if not settings.AUTH0_AUDIENCE:
+        logger.error("AUTH0_AUDIENCE is not set")
+        raise ValueError("AUTH0_AUDIENCE environment variable is required")
+    
+    # Initialize database tables if needed
+    try:
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+    
+    # Start the scheduler for notifications
+    try:
+        start_scheduler()
+        logger.info("Scheduler started successfully")
+    except Exception as e:
+        logger.error(f"Failed to start scheduler: {e}")
+        # Don't fail startup if scheduler fails
+    
+    logger.info("123tracker API started successfully")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +81,16 @@ def get_current_user(
 
 @app.get("/")
 def root():
-    return {"message": "123tracker API"}
+    return {"message": "123tracker API", "version": "1.0.0"}
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for deployment monitoring."""
+    return {
+        "status": "healthy",
+        "service": "123tracker-api",
+        "version": "1.0.0"
+    }
 
 # Topics endpoints
 @app.post("/topics", response_model=schemas.TopicOut, status_code=status.HTTP_201_CREATED)

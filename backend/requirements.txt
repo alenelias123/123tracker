@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 pydantic
@@ -16,3 +16,4 @@ numpy
 pytest
 pytest-asyncio
 pytest-cov
+gunicorn
