@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import date
 import logging
+from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.db import get_db, init_db
@@ -21,16 +22,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="123tracker API",
-    version="1.0.0",
-    description="Study tracker with spaced repetition"
-)
-
-# Validate required environment variables on startup
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services and validate configuration."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    # Startup
     logger.info("Starting 123tracker API...")
     
     # Validate required environment variables
@@ -49,15 +44,29 @@ async def startup_event():
         logger.error(f"Failed to initialize database: {e}")
         raise
     
-    # Start the scheduler for notifications
-    try:
-        start_scheduler()
-        logger.info("Scheduler started successfully")
-    except Exception as e:
-        logger.error(f"Failed to start scheduler: {e}")
-        # Don't fail startup if scheduler fails
+    # Start the scheduler for notifications if enabled
+    if settings.ENABLE_SCHEDULER:
+        try:
+            start_scheduler()
+            logger.info("Scheduler started successfully")
+        except Exception as e:
+            logger.warning(f"Failed to start scheduler: {e}. Notifications will not be sent.")
+    else:
+        logger.info("Scheduler is disabled (ENABLE_SCHEDULER=false)")
     
     logger.info("123tracker API started successfully")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down 123tracker API...")
+
+app = FastAPI(
+    title="123tracker API",
+    version="1.0.0",
+    description="Study tracker with spaced repetition",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,

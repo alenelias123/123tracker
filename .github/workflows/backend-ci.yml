@@ -12,9 +12,15 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
     
     services:
       postgres:
@@ -66,6 +72,9 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
     
     steps:
     - uses: actions/checkout@v4

@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 engine = create_engine(
     settings.DB_URL,
     pool_pre_ping=True,  # Verify connections before using them
-    pool_size=10,  # Maximum number of connections to keep open
-    max_overflow=20,  # Maximum overflow connections
-    pool_recycle=3600,  # Recycle connections after 1 hour
+    pool_size=settings.DB_POOL_SIZE,  # Maximum number of connections to keep open
+    max_overflow=settings.DB_MAX_OVERFLOW,  # Maximum overflow connections
+    pool_recycle=settings.DB_POOL_RECYCLE,  # Recycle connections after N seconds
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
