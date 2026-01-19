@@ -12,7 +12,14 @@ def send_due_notifications(db: Session):
         user = s.topic.user
         if user and user.email:
             send_email(to=user.email, subject="Study Reminder", body=f"Your session (Day {s.day_index}) for '{s.topic.title}' is due today.")
-            n = Notification(user_id=user.id, topic_id=s.topic_id, session_id=s.id, method="email")
+            from datetime import datetime, timezone
+            n = Notification(
+                user_id=user.id, 
+                topic_id=s.topic_id, 
+                session_id=s.id, 
+                method="email",
+                sent_at=datetime.now(timezone.utc)
+            )
             db.add(n)
     db.commit()
 

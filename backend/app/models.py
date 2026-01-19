@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, Float, JSON, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy_pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector
 from app.db import Base
 import enum
 
